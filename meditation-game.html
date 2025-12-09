@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>冥想引导 - 情绪充电站</title>
+    <meta name="description" content="通过冥想引导，帮助您放松身心，提升专注力">
+    <meta name="keywords" content="冥想引导,放松,专注力,正念">
+    <meta name="author" content="Z世代情绪充电站团队">
+    <!-- 引入字体 -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=ZCOOL+XiaoWei&display=swap');
+    </style>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/animation.css">
+    <link rel="stylesheet" href="css/icons.css">
+    <style>
+        /* 游戏页面特定样式 */
+        .game-page-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .game-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .game-title {
+            font-size: 2.5rem;
+            color: #ff6b6b;
+            margin-bottom: 10px;
+        }
+        
+        .game-description {
+            font-size: 1.1rem;
+            color: #666;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .game-content {
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .back-to-home {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 10px 20px;
+            background-color: #ff6b6b;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .back-to-home:hover {
+            background-color: #ff5252;
+            transform: translateY(-2px);
+        }
+        
+        /* 冥想引导语样式 */
+        .meditation-guide {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 15px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .guide-text {
+            font-size: 1.2rem;
+            color: #495057;
+            line-height: 1.6;
+            max-width: 600px;
+            margin: 0;
+        }
+        
+        .voice-controls {
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .voice-controls label {
+            font-weight: 500;
+            color: #666;
+        }
+        
+        .voice-controls input[type="range"] {
+            width: 100px;
+        }
+    </style>
+</head>
+<body class="meditation-game">
+    <div class="game-page-container">
+        <header class="game-header">
+            <h1 class="game-title">冥想引导</h1>
+            <p class="game-description">通过定时冥想，帮助您放松身心，提升专注力。5分钟的冥想练习，让您重新焕发活力。</p>
+        </header>
+        
+        <main class="game-content">
+            <!-- 冥想引导游戏 -->
+            <div id="meditation-game" class="game meditation-game">
+                <div class="meditation-container">
+                    <div class="timer-display">00:00</div>
+                    <div class="meditation-progress">
+                        <div class="progress-bar"></div>
+                    </div>
+                    <div class="meditation-controls">
+                        <button id="start-meditation" class="btn btn-primary">开始冥想</button>
+                        <button id="stop-meditation" class="btn btn-secondary">停止冥想</button>
+                    </div>
+                    <div class="voice-controls">
+                        <label for="voice-speed">语音速度：</label>
+                        <input type="range" id="voice-speed" min="0.5" max="2" step="0.1" value="1">
+                        <label for="voice-volume">音量：</label>
+                        <input type="range" id="voice-volume" min="0" max="1" step="0.1" value="0.8">
+                    </div>
+                    <p class="meditation-instruction">请找一个安静的地方，舒适地坐下，跟随冥想引导语放松身心。</p>
+                    <div class="meditation-guide">
+                        <p class="guide-text">准备好开始冥想了吗？</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <a href="index.html" class="back-to-home">返回首页</a>
+        </footer>
+    </div>
+
+    <!-- 游戏脚本 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 冥想引导游戏
+            const timerDisplay = document.querySelector('.timer-display');
+            const startMeditationBtn = document.getElementById('start-meditation');
+            const stopMeditationBtn = document.getElementById('stop-meditation');
+            const meditationProgress = document.querySelector('.meditation-progress .progress-bar');
+            const guideText = document.querySelector('.guide-text');
+            const voiceSpeed = document.getElementById('voice-speed');
+            const voiceVolume = document.getElementById('voice-volume');
+            let meditationTimer = null;
+            let meditationTime = 0;
+            let lastGuideTime = -1; // 记录上次播放引导语的时间
+            const totalMeditationTime = 300; // 5分钟，单位：秒
+            
+            // 语音合成
+            const synth = window.speechSynthesis;
+            let currentUtterance = null;
+            
+            // 冥想引导语序列
+            const meditationGuides = [
+                { time: 0, text: '现在开始我们的冥想练习，请轻轻闭上眼睛，放松全身...' },
+                { time: 30, text: '将注意力集中在呼吸上，感受空气从鼻腔流入，再从鼻腔流出...' },
+                { time: 60, text: '深吸一口气，让空气充满整个肺部，然后缓慢呼出...' },
+                { time: 120, text: '注意身体的感觉，感受心跳的节奏，感受血液在体内流动...' },
+                { time: 180, text: '如果思绪开始飘走，不要担心，温柔地将注意力带回到呼吸上...' },
+                { time: 240, text: '想象自己身处一个宁静的地方，周围是你喜欢的自然景色...' },
+                { time: 270, text: '慢慢开始将注意力带回现实，感受身体与座位的接触...' },
+                { time: 290, text: '准备结束冥想，当计时器结束时，你可以慢慢睁开眼睛...' }
+            ];
+            
+            // 更新计时器显示
+            function updateTimerDisplay() {
+                const minutes = Math.floor(meditationTime / 60).toString().padStart(2, '0');
+                const seconds = (meditationTime % 60).toString().padStart(2, '0');
+                timerDisplay.textContent = `${minutes}:${seconds}`;
+            }
+            
+            // 更新进度条
+            function updateProgress() {
+                const progress = (meditationTime / totalMeditationTime) * 100;
+                meditationProgress.style.width = `${progress}%`;
+            }
+            
+            // 播放语音引导语
+            function speakGuideText(text) {
+                // 停止当前正在播放的语音
+                if (currentUtterance) {
+                    synth.cancel();
+                }
+                
+                // 创建新的语音合成对象
+                currentUtterance = new SpeechSynthesisUtterance(text);
+                
+                // 设置语音属性
+                currentUtterance.lang = 'zh-CN'; // 设置中文
+                currentUtterance.rate = parseFloat(voiceSpeed.value); // 语速
+                currentUtterance.volume = parseFloat(voiceVolume.value); // 音量
+                
+                // 找到中文语音
+                const voices = synth.getVoices();
+                const chineseVoice = voices.find(voice => 
+                    voice.lang.includes('zh-CN') || voice.name.includes('Chinese')
+                );
+                
+                if (chineseVoice) {
+                    currentUtterance.voice = chineseVoice;
+                }
+                
+                // 播放语音
+                synth.speak(currentUtterance);
+            }
+            
+            // 更新引导语
+            function updateGuideText() {
+                // 找到当前时间对应的引导语
+                const currentGuide = meditationGuides.filter(guide => guide.time <= meditationTime).pop();
+                if (currentGuide) {
+                    guideText.textContent = currentGuide.text;
+                    
+                    // 如果当前时间与上次播放引导语的时间不同，则播放语音
+                    if (currentGuide.time !== lastGuideTime) {
+                        speakGuideText(currentGuide.text);
+                        lastGuideTime = currentGuide.time;
+                    }
+                }
+            }
+            
+            // 初始化语音合成
+            function initSpeechSynthesis() {
+                // 获取可用语音列表
+                function loadVoices() {
+                    const voices = synth.getVoices();
+                    console.log('可用语音:', voices);
+                }
+                
+                // 监听语音加载完成事件
+                synth.onvoiceschanged = loadVoices;
+                
+                // 立即尝试加载语音
+                loadVoices();
+            }
+            
+            // 初始化语音合成
+            initSpeechSynthesis();
+            
+            startMeditationBtn.addEventListener('click', function() {
+                if (meditationTimer) return;
+                
+                // 开始时立即更新引导语
+                updateGuideText();
+                
+                meditationTimer = setInterval(() => {
+                    if (meditationTime < totalMeditationTime) {
+                        meditationTime++;
+                        updateTimerDisplay();
+                        updateProgress();
+                        updateGuideText();
+                    } else {
+                        clearInterval(meditationTimer);
+                        meditationTimer = null;
+                        // 播放结束提示
+                        speakGuideText('冥想时间结束！您已完成5分钟的冥想练习。');
+                        // 延迟显示提示框，让语音播放完成
+                        setTimeout(() => {
+                            alert('冥想时间结束！您已完成5分钟的冥想练习。');
+                        }, 2000);
+                    }
+                }, 1000);
+            });
+            
+            stopMeditationBtn.addEventListener('click', function() {
+                if (meditationTimer) {
+                    clearInterval(meditationTimer);
+                    meditationTimer = null;
+                }
+                // 停止语音播放
+                synth.cancel();
+                currentUtterance = null;
+                
+                meditationTime = 0;
+                lastGuideTime = -1;
+                updateTimerDisplay();
+                updateProgress();
+                guideText.textContent = '准备好开始冥想了吗？';
+            });
+        });
+    </script>
+</body>
+</html>
