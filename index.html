@@ -1,0 +1,1574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>情绪充电站</title>
+    <meta name="description" content="为Z世代提供情绪治愈、心理舒缓和创意表达的互动平台">
+    <meta name="keywords" content="情绪充电站,治愈,心理,涂鸦,解压,情绪管理">
+    <meta name="author" content="Z世代情绪充电站团队">
+    <!-- 引入字体 -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=ZCOOL+XiaoWei&display=swap');
+    </style>
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/animation.css">
+    <link rel="stylesheet" href="./css/icons.css">
+    <!-- 内联JavaScript - 基本页面功能 -->
+    <script type="text/javascript">
+        // 立即执行的初始化代码
+        (function() {
+            // 添加缺失的bindAllElements函数
+            window.bindAllElements = function() {
+                
+                // 绑定清空按钮
+                const clearButtons = document.querySelectorAll('#clear-button, #clear-canvas, .clear-btn, .btn-clear');
+                clearButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        if (typeof window.clearCanvas === 'function') {
+                            window.clearCanvas();
+                        }
+                    });
+                });
+                
+                // 绑定颜色选择器
+                const colorOptions = document.querySelectorAll('.color, .color-option');
+                colorOptions.forEach(option => {
+                    option.addEventListener('click', function() {
+                        const color = this.getAttribute('data-color') || this.style.backgroundColor;
+                        if (color && typeof window.selectColor === 'function') {
+                            window.selectColor(color, this);
+                        }
+                    });
+                });
+                
+                // 绑定工具按钮
+                const toolButtons = document.querySelectorAll('.tool-btn, .tool-button');
+                toolButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const tool = this.getAttribute('data-tool') || this.dataset.tool;
+                        if (tool && typeof window.selectTool === 'function') {
+                            window.selectTool(tool, this);
+                        }
+                    });
+                });
+            };
+            
+            // 页面加载完成后执行初始化
+            function initOnLoad() {
+                // 先绑定所有元素
+                if (typeof window.bindAllElements === 'function') {
+                    window.bindAllElements();
+                }
+                
+                // 然后初始化画布
+                setTimeout(() => {
+                    if (typeof window.initDoodleCanvas === 'function') {
+                        window.initDoodleCanvas();
+                    }
+                }, 300);
+                
+                // 设置默认选中状态
+                setTimeout(() => {
+                    const defaultColor = document.querySelector('.color[data-color="#000000"]');
+                    if (defaultColor && defaultColor instanceof HTMLElement) {
+                        defaultColor.classList.add('active');
+                    }
+                    
+                    const defaultTool = document.querySelector('.tool-btn[data-tool="brush"]');
+                    if (defaultTool && defaultTool instanceof HTMLElement) {
+                        defaultTool.classList.add('active');
+                    }
+                }, 500);
+            }
+            
+            // 监听页面加载状态
+            if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                setTimeout(initOnLoad, 300);
+            } else {
+                window.addEventListener('load', initOnLoad);
+                document.addEventListener('DOMContentLoaded', function() {
+                    setTimeout(initOnLoad, 300);
+                });
+            }
+            
+
+        })();
+    </script>
+    <!-- 引入JavaScript文件 -->
+    <script src="js/utils.js" type="module"></script>
+    <!-- 涂鸦板功能已在index.html中直接实现 -->
+    <script>
+    // 确保bindAllElements函数存在以避免错误
+    if (typeof window.bindAllElements !== 'function') {
+        window.bindAllElements = function() {
+            // 绑定所有元素事件
+        };
+    }
+    </script>
+    <script>
+    
+    // 初始化涂鸦功能
+    // 保存原始的initDoodle函数引用（来自js/index.js）
+    const originalInitDoodle = window.initDoodle;
+    
+    window.initDoodle = function() {
+        // 确保涂鸦页面可见
+        const doodlePage = document.getElementById('doodle');
+        if (doodlePage) {
+            // 确保页面可见
+            doodlePage.style.display = 'block';
+            doodlePage.classList.remove('hidden');
+        } else {
+            console.error('未找到doodle页面元素');
+            return false;
+        }
+        
+        // 延迟初始化画布，确保DOM完全渲染
+        setTimeout(() => {
+            if (typeof window.initDoodleCanvas === 'function') {
+                const result = window.initDoodleCanvas();
+                
+                return result;
+            } else {
+                console.error('initDoodleCanvas函数未找到');
+                return false;
+            }
+        }, 50);
+        
+        return true;
+    };
+    
+    // 最简单直接的导航函数
+    function navigateTo(pageId) {
+        console.log('导航到页面:', pageId);
+        
+        // 切换背景图片
+        function setBackgroundImage(pageId) {
+            const body = document.body;
+            const imagePath = './图片/';
+            
+            switch (pageId) {
+                case 'home':
+                    // 首页背景为第一张图片
+                    body.style.backgroundImage = `url(${imagePath}微信图片_20251208225450_164_7.png)`;
+                    break;
+                case 'relaxwall':
+                    // 视觉解压墙背景为第三张图片
+                    body.style.backgroundImage = `url(${imagePath}微信图片_20251208225455_166_7.png)`;
+                    break;
+                case 'doodle':
+                    // 涂鸦治愈板背景为第二张图片
+                    body.style.backgroundImage = `url(${imagePath}微信图片_20251208225454_165_7.png)`;
+                    break;
+                case 'relax-games':
+                case 'emotion-charging':
+                    // 其他两个板块背景为第四张图片
+                    body.style.backgroundImage = `url(${imagePath}微信图片_20251208225456_167_7.png)`;
+                    break;
+                default:
+                    // 默认使用首页背景
+                    body.style.backgroundImage = `url(${imagePath}微信图片_20251208225450_164_7.png)`;
+            }
+        }
+        
+        // 设置背景图片
+        setBackgroundImage(pageId);
+        
+        // 获取所有页面
+        const pages = document.querySelectorAll('.page');
+        
+        // 隐藏所有页面
+        pages.forEach(page => {
+            page.classList.add('hidden');
+            page.classList.remove('active');
+            // 确保所有页面都隐藏
+            page.style.display = 'none';
+        });
+        
+        // 显示目标页面
+        const targetPage = document.getElementById(pageId);
+        if (targetPage) {
+            console.log('找到目标页面:', pageId);
+            
+            // 先移除隐藏类，再添加激活类，最后确保显示
+            targetPage.classList.remove('hidden');
+            targetPage.classList.add('active');
+            targetPage.style.display = 'block';
+            
+            // 确保页面是可见的
+            targetPage.scrollIntoView({ behavior: 'smooth' });
+            
+            // 调用对应页面的初始化函数
+            if (pageId === 'doodle') {
+                // 调用涂鸦初始化函数
+                if (typeof window.initDoodleCanvas === 'function') {
+                    window.initDoodleCanvas();
+                }
+            }
+        } else {
+            console.error('未找到页面:', pageId);
+        }
+    }
+    
+    // 页面加载完成后立即执行
+    document.addEventListener('DOMContentLoaded', function() {
+        // 确保首页是可见的
+        navigateTo('home');
+        
+        // 绑定所有入口卡片点击事件
+        const cards = document.querySelectorAll('.entrance-card');
+        cards.forEach(card => {
+            card.onclick = function() {
+                const target = this.getAttribute('data-target');
+                if (target) {
+                    navigateTo(target);
+                }
+            };
+            // 确保卡片是可点击的
+            card.style.cursor = 'pointer';
+            card.style.display = 'block';
+        });
+        
+        // 绑定返回首页按钮事件
+        const backHomeBtn = document.querySelector('.back-home-btn');
+        if (backHomeBtn) {
+            backHomeBtn.onclick = function() {
+                navigateTo('home');
+            };
+            backHomeBtn.style.cursor = 'pointer';
+        }
+    });
+    
+
+    </script>
+    <!-- 脚本已在页面顶部导入 -->
+</head>
+<body>
+        <!-- 背景音乐控制 -->
+        <div class="music-control">
+            <button class="music-btn" id="music-btn" title="播放/暂停音乐">
+                <span class="music-icon">🎵</span>
+            </button>
+            <div class="music-progress">
+                <input type="range" id="music-progress" class="progress-bar" min="0" max="100" value="0" step="0.1">
+            </div>
+            <select class="music-select" id="music-select" title="选择音乐">
+                <option value="">选择音乐</option>
+                <option value="audio/Janevo_-_Calm_Reflections_(Lofi_Chill_Hop).mp3">轻松音乐</option>
+                <option value="audio/Paradeigma_-_Souldrop_(feat._Yogi_Rulez).mp3">灵魂之滴</option>
+                <option value="audio/RIZA_music_-_Centenary_Mechanism.mp3">百年机制</option>
+                <option value="audio/Øraeth_-_still_falling.mp3">依然坠落</option>
+            </select>
+        </div>
+
+        <!-- 背景动态元素 -->
+        <div class="background-container">
+        <div class="cloud cloud-1"></div>
+        <div class="cloud cloud-2"></div>
+        <div class="cloud cloud-3"></div>
+        <div class="bubble bubble-1"></div>
+        <div class="bubble bubble-2"></div>
+        <div class="bubble bubble-3"></div>
+    </div>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+        <!-- 首页 -->
+        <section id="home" class="page">
+            <h1 class="site-title">情绪充电站</h1>
+            <p class="site-subtitle">用视觉治愈你的心灵</p>
+            
+            <div class="function-entrances">
+                <div class="entrance-card" data-target="relaxwall">
+                    <div class="entrance-icon relaxwall-icon"></div>
+                    <h2 class="entrance-title">视觉解压墙</h2>
+                </div>
+                
+                <div class="entrance-card" data-target="doodle">
+                    <div class="entrance-icon doodle-icon"></div>
+                    <h2 class="entrance-title">涂鸦治愈板</h2>
+                </div>
+                
+                <div class="entrance-card" data-target="emotion-charging">
+                    <div class="entrance-icon charging-icon"></div>
+                    <h2 class="entrance-title">温暖能量站</h2>
+                </div>
+                <div class="entrance-card" data-target="relax-games">
+                    <div class="entrance-icon games-icon"></div>
+                    <h2 class="entrance-title">放松小游戏</h2>
+                </div>
+
+            </div>
+        </section>
+
+
+
+        <!-- 视觉解压墙 -->
+        <section id="relaxwall" class="page hidden">
+            <div class="relaxwall-container">
+                <div class="relaxwall-sidebar">
+                     <h3>解压场景</h3>
+                     <button class="scene-btn active" data-scene="wave">水波纹</button>
+                     <button class="scene-btn" data-scene="particles">粒子流</button>
+                     <button class="scene-btn" data-scene="gradient">渐变块</button>
+                 </div>
+                
+                <div class="relaxwall-main">
+                    <!-- 水波纹画布 -->
+                    <canvas id="relax-canvas" width="800" height="500" style="background:#fff; border:3px solid #000; cursor:pointer;"></canvas>
+                    <script>
+                        // 视觉解压墙场景管理系统
+                        (function() {
+                            const canvas = document.getElementById('relax-canvas');
+                            const ctx = canvas.getContext('2d');
+                            let currentScene = 'wave';
+                            let animationId = null;
+                            
+                            // 场景数据
+                            const scenes = {
+                                wave: {
+                                    data: [],
+                                    init: function() {
+                                        this.data = [];
+                                        // 添加初始波纹
+                                        this.data.push({x: 400, y: 250, radius: 0, opacity: 1});
+                                    },
+                                    update: function() {
+                                        // 更新所有波纹
+                                        for (let i = this.data.length - 1; i >= 0; i--) {
+                                            const wave = this.data[i];
+                                            wave.radius += 12;
+                                            wave.opacity -= 0.02;
+                                            
+                                            if (wave.opacity <= 0) {
+                                                this.data.splice(i, 1);
+                                            }
+                                        }
+                                    },
+                                    draw: function() {
+                                        // 清空画布
+                                        ctx.fillStyle = '#ffffff';
+                                        ctx.fillRect(0, 0, 800, 500);
+                                        
+                                        // 绘制所有波纹
+                                        for (let i = 0; i < this.data.length; i++) {
+                                            const wave = this.data[i];
+                                            
+                                            // 绘制多层蓝色波纹
+                                            for (let j = 0; j < 4; j++) {
+                                                const r = wave.radius - (j * 25);
+                                                if (r > 0) {
+                                                    ctx.beginPath();
+                                                    ctx.arc(wave.x, wave.y, r, 0, Math.PI * 2);
+                                                    ctx.strokeStyle = `rgba(0, 150, 255, ${wave.opacity * (1 - j * 0.15)})`;
+                                                    ctx.lineWidth = 12 - j * 2;
+                                                    ctx.stroke();
+                                                }
+                                            }
+                                        }
+                                    },
+                                    onCanvasClick: function(x, y) {
+                                        // 添加多个波纹
+                                        for (let i = 0; i < 3; i++) {
+                                            setTimeout(() => {
+                                                this.data.push({
+                                                    x: x + (Math.random() * 10 - 5),
+                                                    y: y + (Math.random() * 10 - 5),
+                                                    radius: 0,
+                                                    opacity: 1
+                                                });
+                                            }, i * 80);
+                                        }
+                                    }
+                                },
+                                particles: {
+                                    data: [],
+                                    init: function() {
+                                        this.data = [];
+                                        // 初始化粒子
+                                        for (let i = 0; i < 100; i++) {
+                                            this.data.push({
+                                                x: Math.random() * 800,
+                                                y: Math.random() * 500,
+                                                vx: (Math.random() - 0.5) * 2,
+                                                vy: (Math.random() - 0.5) * 2,
+                                                size: Math.random() * 5 + 2,
+                                                color: `rgba(${Math.random() * 100 + 50}, ${Math.random() * 100 + 100}, ${Math.random() * 200 + 55}, ${Math.random() * 0.5 + 0.5})`
+                                            });
+                                        }
+                                    },
+                                    update: function() {
+                                        // 更新所有粒子
+                                        for (let i = 0; i < this.data.length; i++) {
+                                            const p = this.data[i];
+                                            p.x += p.vx;
+                                            p.y += p.vy;
+                                            
+                                            // 边界检测
+                                            if (p.x < 0 || p.x > 800) p.vx = -p.vx;
+                                            if (p.y < 0 || p.y > 500) p.vy = -p.vy;
+                                        }
+                                    },
+                                    draw: function() {
+                                        // 清空画布
+                                        ctx.fillStyle = '#ffffff';
+                                        ctx.fillRect(0, 0, 800, 500);
+                                        
+                                        // 绘制所有粒子
+                                        for (let i = 0; i < this.data.length; i++) {
+                                            const p = this.data[i];
+                                            ctx.fillStyle = p.color;
+                                            ctx.beginPath();
+                                            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                                            ctx.fill();
+                                        }
+                                    },
+                                    onCanvasClick: function(x, y) {
+                                        // 添加新粒子
+                                        for (let i = 0; i < 20; i++) {
+                                            this.data.push({
+                                                x: x,
+                                                y: y,
+                                                vx: (Math.random() - 0.5) * 5,
+                                                vy: (Math.random() - 0.5) * 5,
+                                                size: Math.random() * 4 + 1,
+                                                color: `rgba(${Math.random() * 100 + 50}, ${Math.random() * 100 + 100}, ${Math.random() * 200 + 55}, ${Math.random() * 0.5 + 0.5})`
+                                            });
+                                        }
+                                    }
+                                },
+                                gradient: {
+                                    data: [],
+                                    init: function() {
+                                        this.data = [];
+                                        // 初始化渐变块
+                                        for (let i = 0; i < 10; i++) {
+                                            const size = Math.random() * 100 + 50;
+                                            this.data.push({
+                                                x: Math.random() * (800 - size),
+                                                y: Math.random() * (500 - size),
+                                                width: size,
+                                                height: size,
+                                                color: `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 0.8)`,
+                                                rotation: Math.random() * Math.PI * 2
+                                            });
+                                        }
+                                    },
+                                    update: function() {
+                                        // 更新所有渐变块
+                                        for (let i = 0; i < this.data.length; i++) {
+                                            this.data[i].rotation += 0.01;
+                                        }
+                                    },
+                                    draw: function() {
+                                        // 清空画布
+                                        ctx.fillStyle = '#ffffff';
+                                        ctx.fillRect(0, 0, 800, 500);
+                                        
+                                        // 绘制所有渐变块
+                                        for (let i = 0; i < this.data.length; i++) {
+                                            const block = this.data[i];
+                                            
+                                            ctx.save();
+                                            ctx.translate(block.x + block.width / 2, block.y + block.height / 2);
+                                            ctx.rotate(block.rotation);
+                                            
+                                            // 创建径向渐变
+                                            const gradient = ctx.createRadialGradient(
+                                                -block.width / 2, -block.height / 2,
+                                                0,
+                                                block.width / 2, block.height / 2,
+                                                Math.sqrt(block.width * block.width + block.height * block.height) / 2
+                                            );
+                                            gradient.addColorStop(0, block.color);
+                                            gradient.addColorStop(1, 'rgba(255, 255, 255, 0.2)');
+                                            
+                                            ctx.fillStyle = gradient;
+                                            ctx.fillRect(-block.width / 2, -block.height / 2, block.width, block.height);
+                                            
+                                            ctx.restore();
+                                        }
+                                    },
+                                    onCanvasClick: function(x, y) {
+                                        // 添加新的渐变块
+                                        const size = Math.random() * 100 + 50;
+                                        this.data.push({
+                                            x: x - size / 2,
+                                            y: y - size / 2,
+                                            width: size,
+                                            height: size,
+                                            color: `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 0.8)`,
+                                            rotation: Math.random() * Math.PI * 2
+                                        });
+                                    }
+                                }
+                            };
+                            
+                            // 动画循环
+                            function animate() {
+                                const scene = scenes[currentScene];
+                                if (scene) {
+                                    scene.update();
+                                    scene.draw();
+                                }
+                                animationId = requestAnimationFrame(animate);
+                            }
+                            
+                            // 切换场景
+                            function switchScene(sceneName) {
+                                if (scenes[sceneName]) {
+                                    currentScene = sceneName;
+                                    scenes[sceneName].init();
+                                    
+                                    // 更新按钮状态
+                                    document.querySelectorAll('.scene-btn').forEach(btn => {
+                                        btn.classList.remove('active');
+                                        if (btn.dataset.scene === sceneName) {
+                                            btn.classList.add('active');
+                                        }
+                                    });
+                                }
+                            }
+                            
+                            // 绑定场景切换按钮事件
+                            document.querySelectorAll('.scene-btn').forEach(btn => {
+                                btn.addEventListener('click', function() {
+                                    const scene = this.dataset.scene;
+                                    switchScene(scene);
+                                });
+                            });
+                            
+                            // 绑定画布点击事件
+                            canvas.addEventListener('click', function(e) {
+                                const rect = canvas.getBoundingClientRect();
+                                const x = e.clientX - rect.left;
+                                const y = e.clientY - rect.top;
+                                
+                                const scene = scenes[currentScene];
+                                if (scene && scene.onCanvasClick) {
+                                    scene.onCanvasClick(x, y);
+                                }
+                            });
+                            
+                            // 初始化
+                            switchScene('wave');
+                            animate();
+                            
+                            // 导出公共方法供外部调用
+                            window.relaxWall = {
+                                switchScene: switchScene
+                            };
+                        })();
+                    </script>
+                </div>
+            </div>
+        </section>
+
+        <!-- 涂鸦治愈板 -->
+        <section id="doodle" class="page hidden">
+            <div class="doodle-container">
+                <div class="doodle-sidebar">
+                    <h3>绘画工具</h3>
+                    <div class="tools">
+                        <button class="tool-btn active" data-tool="brush" onclick="selectTool('brush', this); return false;" style="cursor: pointer; z-index: 9999; position: relative; pointer-events: auto;">
+                            <span class="tool-icon brush-icon"></span>
+                            <span>软边画笔</span>
+                        </button>
+                        <button class="tool-btn" data-tool="eraser" onclick="selectTool('eraser', this); return false;" style="cursor: pointer; z-index: 9999; position: relative; pointer-events: auto;">
+                            <span class="tool-icon eraser-icon"></span>
+                            <span>橡皮擦</span>
+                        </button>
+                    </div>
+                    
+                    <h3>颜色选择</h3>
+                    <div class="color-palette">
+                        <div class="color color-black active" data-color="#000000" onclick="selectColor('#000000', this); return false;" style="cursor: pointer; z-index: 9999; position: relative; pointer-events: auto;"></div>
+                        <div class="color color-red" data-color="#FF0000" onclick="selectColor('#FF0000', this); return false;" style="cursor: pointer; z-index: 9999; position: relative; pointer-events: auto;"></div>
+                        <div class="color color-tea" data-color="#E6D2AA" onclick="selectColor('#E6D2AA', this); return false;" style="cursor: pointer; z-index: 9999; position: relative; pointer-events: auto;"></div>
+                        <div class="color color-blue" data-color="#A9C6D9" onclick="selectColor('#A9C6D9', this); return false;" style="cursor: pointer; z-index: 9999; position: relative; pointer-events: auto;"></div>
+                        <div class="color color-pink" data-color="#F5CEDC" onclick="selectColor('#F5CEDC', this); return false;" style="cursor: pointer; z-index: 9999; position: relative; pointer-events: auto;"></div>
+                        <div class="color color-green" data-color="#B6D7A8" onclick="selectColor('#B6D7A8', this); return false;" style="cursor: pointer; z-index: 9999; position: relative; pointer-events: auto;"></div>
+                        <div class="color color-purple" data-color="#C9A0DC" onclick="selectColor('#C9A0DC', this); return false;" style="cursor: pointer; z-index: 9999; position: relative; pointer-events: auto;"></div>
+                        <div class="color color-orange" data-color="#F9CB9C" onclick="selectColor('#F9CB9C', this); return false;" style="cursor: pointer; z-index: 9999; position: relative; pointer-events: auto;"></div>
+                    </div>
+                    
+                    <div class="canvas-settings">
+                        <button class="setting-btn" id="clear-canvas">一键清空</button>
+                    </div>
+                </div>
+                
+                <div class="doodle-main">
+                    <canvas id="doodle-canvas" width="800" height="400"></canvas>
+                </div>
+            </div>
+            
+            <div class="doodle-patterns">
+                <h3>灵感参考</h3>
+                <div class="pattern-library">
+                    <div class="pattern" data-pattern="cloud">☁️</div>
+                    <div class="pattern" data-pattern="smile">😊</div>
+                    <div class="pattern" data-pattern="sun">☀️</div>
+                    <div class="pattern" data-pattern="heart">❤️</div>
+                    <div class="pattern" data-pattern="star">⭐</div>
+                    <div class="pattern" data-pattern="moon">🌙</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 放松小游戏 -->
+        <section id="relax-games" class="page hidden">
+            <div class="games-container">
+                <h2 class="games-title">放松小游戏</h2>
+                <div class="games-content">
+                    <!-- 游戏选择区 -->
+                    <div class="game-selection">
+                        <a href="breathing-game.html" class="game-card">
+                            <div class="game-icon breathing-icon"></div>
+                            <h3 class="game-name">呼吸练习</h3>
+                            <p class="game-description">跟随引导进行深呼吸，放松身心</p>
+                        </a>
+                        <a href="bubble-game.html" class="game-card">
+                            <div class="game-icon bubble-icon"></div>
+                            <h3 class="game-name">气泡点击</h3>
+                            <p class="game-description">点击屏幕上的气泡，释放压力，享受乐趣</p>
+                        </a>
+                        <a href="meditation-game.html" class="game-card">
+                            <div class="game-icon meditation-icon"></div>
+                            <h3 class="game-name">冥想引导</h3>
+                            <p class="game-description">跟随音频引导进行冥想放松</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 温暖能量站 -->
+        <section id="emotion-charging" class="page hidden">
+            <div class="charging-station-container">
+                <h2 class="charging-station-title">温暖能量站</h2>
+                <div class="charging-station-content">
+                    <div class="charging-station-button-container">
+                        <button class="charging-station-button" id="get-warmth-btn">获取温暖</button>
+                    </div>
+                    <div class="charging-station-display">
+                        <p class="charging-station-text"></p>
+                        <div class="charging-station-illustration"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 顶部导航栏 -->
+    <nav class="top-nav">
+        <div class="nav-container">
+            <ul class="nav-list">
+                <li class="nav-item"><a href="#home" class="nav-link" onclick="navigateTo('home')">首页</a></li>
+                <li class="nav-item"><a href="#relaxwall" class="nav-link" onclick="navigateTo('relaxwall')">视觉解压墙</a></li>
+                <li class="nav-item"><a href="#doodle" class="nav-link" onclick="navigateTo('doodle')">涂鸦治愈板</a></li>
+                <li class="nav-item"><a href="#emotion-charging" class="nav-link" onclick="navigateTo('emotion-charging')">温暖能量站</a></li>
+                <li class="nav-item"><a href="#relax-games" class="nav-link" onclick="navigateTo('relax-games')">放松小游戏</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 底部信息 -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p class="copyright">© 情绪充电站</p>
+        </div>
+    </footer>
+
+
+
+    <script>
+        // 温暖能量站功能
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取DOM元素
+            const chargingStation = document.getElementById('emotion-charging');
+            const chargingContent = document.querySelector('.charging-station-content');
+            const tipText = document.querySelector('.charging-station-text');
+            const tipIllustration = document.querySelector('.charging-station-illustration');
+            
+            // 随机获取情绪小贴士、暖心话或艺术画
+            function getRandomWarmth() {
+                const warmths = [
+                    // 情绪小贴士
+                    {
+                        type: 'tip',
+                        text: '慌的时候，试试盯着窗外的树看10秒，让呼吸慢下来。',
+                        illustration: '🌳'
+                    },
+                    {
+                        type: 'tip',
+                        text: '不开心时，可以试着写下三件今天让你感激的小事。',
+                        illustration: '📝'
+                    },
+                    {
+                        type: 'tip',
+                        text: '深呼吸是最好的解压方式：吸气4秒，屏息4秒，呼气6秒。',
+                        illustration: '💨'
+                    },
+                    {
+                        type: 'tip',
+                        text: '给自己一个温暖的拥抱，身体会释放出安心的信号。',
+                        illustration: '🤗'
+                    },
+                    {
+                        type: 'tip',
+                        text: '喝一杯温水，照顾好身体，心情也会慢慢好起来。',
+                        illustration: '💧'
+                    },
+                    {
+                        type: 'tip',
+                        text: '闭上眼睛，想象你最喜欢的地方，让思绪短暂逃离。',
+                        illustration: '🌄'
+                    },
+                    // 暖心话
+                    {
+                        type: 'warm',
+                        text: '你已经做得很好了，慢慢来，一切都会好起来的。',
+                        illustration: '💖'
+                    },
+                    {
+                        type: 'warm',
+                        text: '今天的你也很可爱，记得给自己一个微笑。',
+                        illustration: '😊'
+                    },
+                    {
+                        type: 'warm',
+                        text: '不要害怕，你永远不是一个人在战斗。',
+                        illustration: '🤝'
+                    },
+                    {
+                        type: 'warm',
+                        text: '每一个努力的日子，都在为更好的自己铺路。',
+                        illustration: '🌟'
+                    },
+                    {
+                        type: 'warm',
+                        text: '生活有时候会有点苦，但你可以自己加一点糖。',
+                        illustration: '🍬'
+                    },
+                    // ASCII艺术画
+                    {                        type: 'art',                        text: '这里有一朵小花，送给可爱的你',                        illustration: '🌼'                    },                    {                        type: 'art',                        text: '给你一个温暖的小太阳',                        illustration: '☀️'                    },                    {
+                        type: 'art',
+                        text: '温暖小爱心',
+                        illustration: '   💖💖💖💖  \n💖💖💖💖💖💖💖\n💖💖💖💖💖💖💖💖\n💖💖💖💖💖💖💖💖\n 💖💖💖💖💖💖\n   💖💖💖💖\n     💖💖'
+                    },
+                    {
+                        type: 'art',
+                        text: '一只可爱的小猫',
+                        illustration: `\n🐱\n\n  /\\_/\\\n ( o.o )\n  > ^ <`
+                    }
+                ];
+                
+                return warmths[Math.floor(Math.random() * warmths.length)];
+            }
+            
+            // 显示温暖内容
+            function showWarmth() {
+                const warmth = getRandomWarmth();
+                tipText.textContent = warmth.text;
+                tipIllustration.textContent = warmth.illustration;
+            }
+            
+            // 初始化温暖能量站
+            function initEmotionCharging() {
+                // 获取温暖按钮
+                const getWarmthBtn = document.getElementById('get-warmth-btn');
+                
+                // 初始化显示第一条温暖内容
+                showWarmth();
+                
+                // 添加按钮点击事件监听器
+                getWarmthBtn.addEventListener('click', showWarmth);
+            }
+            
+            // 绑定事件
+            // 页面切换功能会在主菜单中处理
+            
+            // 初始化
+            initEmotionCharging();
+        });
+        document.addEventListener('DOMContentLoaded', function() {
+            // 温暖能量站功能
+            const getWarmthBtn = document.getElementById('get-warmth-btn');
+            const tipText = document.querySelector('.charging-station-text');
+            const tipIllustration = document.querySelector('.charging-station-illustration');
+            
+            // 随机获取温暖内容
+            function getRandomWarmth() {
+                const warmths = [
+                    // 情绪小贴士
+                    {
+                        type: 'tip',
+                        text: '慌的时候，试试盯着窗外的树看10秒，让呼吸慢下来。',
+                        illustration: '🌳'
+                    },
+                    {
+                        type: 'tip',
+                        text: '不开心时，可以试着写下三件今天让你感激的小事。',
+                        illustration: '📝'
+                    },
+                    {
+                        type: 'tip',
+                        text: '深呼吸是最好的解压方式：吸气4秒，屏息4秒，呼气6秒。',
+                        illustration: '💨'
+                    },
+                    {
+                        type: 'tip',
+                        text: '给自己一个温暖的拥抱，身体会释放出安心的信号。',
+                        illustration: '🤗'
+                    },
+                    {
+                        type: 'tip',
+                        text: '喝一杯温水，照顾好身体，心情也会慢慢好起来。',
+                        illustration: '💧'
+                    },
+                    {
+                        type: 'tip',
+                        text: '闭上眼睛，想象你最喜欢的地方，让思绪短暂逃离。',
+                        illustration: '🌄'
+                    },
+                    // 暖心话
+                    {
+                        type: 'warm',
+                        text: '你已经做得很好了，慢慢来，一切都会好起来的。',
+                        illustration: '💖'
+                    },
+                    {
+                        type: 'warm',
+                        text: '今天的你也很可爱，记得给自己一个微笑。',
+                        illustration: '😊'
+                    },
+                    {
+                        type: 'warm',
+                        text: '不要害怕，你永远不是一个人在战斗。',
+                        illustration: '🤝'
+                    },
+                    {
+                        type: 'warm',
+                        text: '每一个努力的日子，都在为更好的自己铺路。',
+                        illustration: '🌟'
+                    },
+                    {
+                        type: 'warm',
+                        text: '生活有时候会有点苦，但你可以自己加一点糖。',
+                        illustration: '🍬'
+                    },
+                    // ASCII艺术画
+                    {
+                        type: 'art',
+                        text: '这里有一朵小花，送给可爱的你',
+                        illustration: '🌼'
+                    },
+                    {
+                        type: 'art',
+                        text: '给你一个温暖的小太阳',
+                        illustration: '☀️'
+                    },
+                    {
+                        type: 'art',
+                        text: '温暖小爱心',
+                        illustration: '   💖💖💖💖  \n💖💖💖💖💖💖💖\n💖💖💖💖💖💖💖💖\n💖💖💖💖💖💖💖💖\n 💖💖💖💖💖💖\n   💖💖💖💖\n     💖💖'
+                    },
+                    {
+                        type: 'art',
+                        text: '一只可爱的小猫',
+                        illustration: `\n🐱\n\n  /\\_/\\\n ( o.o )\n  > ^ <`
+                    }
+                ];
+                
+                return warmths[Math.floor(Math.random() * warmths.length)];
+            }
+            
+            // 显示温暖内容
+            function showWarmth() {
+                const warmth = getRandomWarmth();
+                tipText.textContent = warmth.text;
+                tipIllustration.textContent = warmth.illustration;
+            }
+            
+            // 初始化温暖能量站
+            function initWarmthStation() {
+                // 初始化显示第一条温暖内容
+                showWarmth();
+                
+                // 添加按钮点击事件监听器
+                if (getWarmthBtn) {
+                    getWarmthBtn.addEventListener('click', showWarmth);
+                }
+            }
+            
+            // 初始化温暖能量站
+            initWarmthStation();
+            
+            // 旧的tips面板功能（保持兼容性）
+            const tipsToggle = document.querySelector('.tips-toggle');
+            const tipsPanel = document.querySelector('.tips-panel');
+            const tipsContent = document.querySelector('.tips-content');
+            const oldTipText = document.querySelector('.tip-text');
+            const oldTipIllustration = document.querySelector('.tip-illustration');
+            
+            // 拖动功能变量
+            let isDragging = false;
+            let currentX;
+            let currentY;
+            let initialX;
+            let initialY;
+            let xOffset = 0;
+            let yOffset = 0;
+            let isDragged = false;
+            
+            // 获取面板当前位置
+            function getElementOffset() {
+                const rect = tipsPanel.getBoundingClientRect();
+                return {
+                    x: rect.left,
+                    y: rect.top
+                };
+            }
+            
+            // 旧的tips面板功能（保持兼容性）
+            // 显示温暖内容
+            function showWarmth() {
+                const warmth = getRandomWarmth();
+                if (oldTipText) oldTipText.textContent = warmth.text;
+                if (oldTipIllustration) oldTipIllustration.textContent = warmth.illustration;
+            }
+            
+            // 初始化情绪小贴士
+            function initTip() {
+                // 初始化显示第一条温暖内容
+                showWarmth();
+            }
+            
+            // 切换情绪小贴士显示状态
+            function toggleTip() {
+                // 只有当没有拖动时才切换显示状态
+                if (!isDragged) {
+                    tipsContent.classList.toggle('hidden');
+                    tipsToggle.classList.toggle('active');
+                    
+                    // 如果面板展开，初始化内容
+                    if (!tipsContent.classList.contains('hidden')) {
+                        initTip();
+                    }
+                }
+                // 重置拖动状态
+                isDragged = false;
+            }
+            
+            // 拖拽功能实现
+            function dragStart(e) {
+                const offset = getElementOffset();
+                
+                // 初始位置设置为当前位置
+                xOffset = offset.x;
+                yOffset = offset.y;
+                
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+                
+                // 初始重置拖动状态
+                isDragging = true;
+                isDragged = false;
+                
+                // 添加拖动时的鼠标样式
+                document.body.style.cursor = 'grabbing';
+                
+                // 阻止默认行为以避免文本选择
+                e.preventDefault();
+            }
+            
+            function drag(e) {
+                if (isDragging) {
+                    e.preventDefault();
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                    
+                    xOffset = currentX;
+                    yOffset = currentY;
+                    
+                    isDragged = true;
+                    
+                    // 直接设置位置，不使用transform
+                    tipsPanel.style.left = currentX + 'px';
+                    tipsPanel.style.top = currentY + 'px';
+                    tipsPanel.style.right = 'auto';
+                    tipsPanel.style.bottom = 'auto';
+                }
+            }
+            
+            function dragEnd() {
+                // 恢复鼠标样式
+                document.body.style.cursor = 'move';
+                
+                // 只有当真正拖动时才禁用切换
+                if (isDragged) {
+                    // 阻止toggleTip执行
+                    setTimeout(() => {
+                        isDragged = false;
+                    }, 100);
+                }
+                
+                isDragging = false;
+            }
+            
+            // 绑定事件
+            tipsToggle.addEventListener('click', toggleTip);
+            
+            // 绑定拖拽事件
+            tipsPanel.addEventListener('mousedown', dragStart);
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', dragEnd);
+            
+            // 移动端支持
+            tipsPanel.addEventListener('touchstart', (e) => {
+                const touch = e.touches[0];
+                dragStart({ 
+                    clientX: touch.clientX, 
+                    clientY: touch.clientY,
+                    preventDefault: () => e.preventDefault()
+                });
+            }, { passive: false });
+            
+            document.addEventListener('touchmove', (e) => {
+                if (isDragging) {
+                    const touch = e.touches[0];
+                    drag({ 
+                        clientX: touch.clientX, 
+                        clientY: touch.clientY,
+                        preventDefault: () => {}
+                    });
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            document.addEventListener('touchend', dragEnd);
+            
+            // 初始化
+            initTip();
+        });
+    </script>
+
+
+        <script>
+        // 全局变量初始化
+        window.currentColor = '#E6D2AA'; // 默认颜色
+        window.currentTool = 'brush'; // 默认工具
+        window.doodleCanvas = null;
+        window.doodleCtx = null;
+        window.isDrawing = false; // 使用window前缀确保全局一致性
+        window.lastX = 0; // 上一个X坐标
+        window.lastY = 0; // 上一个Y坐标
+        
+
+        
+        // 更新画布尺寸
+        function updateCanvasSize() {
+            try {
+                if (window.doodleCanvas) {
+                    // 获取画布容器或使用视口尺寸
+                    const container = window.doodleCanvas.parentElement || window;
+                    
+                    // 直接设置合理的画布尺寸，不依赖CSS计算
+                    const width = 800; // 默认宽度
+                    const height = 600; // 默认高度
+                    
+                    // 直接设置画布属性，而不只是CSS样式
+                    window.doodleCanvas.width = width;
+                    window.doodleCanvas.height = height;
+                    
+                    // 确保CSS样式与画布尺寸匹配
+                    window.doodleCanvas.style.width = width + 'px';
+                    window.doodleCanvas.style.height = height + 'px';
+                    
+                    // 移除可能干扰绘图的样式
+                    window.doodleCanvas.style.border = '1px solid #ccc';
+                    window.doodleCanvas.style.background = 'transparent';
+                    
+
+                    
+                    // 重新设置绘图样式
+                    if (window.doodleCtx) {
+                        window.doodleCtx.strokeStyle = window.currentColor || '#E6D2AA';
+                        window.doodleCtx.lineWidth = window.currentTool === 'eraser' ? 20 : 1;
+                        window.doodleCtx.lineCap = 'round';
+                        window.doodleCtx.lineJoin = 'round';
+                        window.doodleCtx.globalCompositeOperation = window.currentTool === 'eraser' ? 'destination-out' : 'source-over';
+                    }
+                }
+            } catch (error) {
+                console.error('更新画布尺寸时出错:', error);
+            }
+        }
+        
+
+        </script>
+        
+        <!-- 完整的涂鸦板实现 -->
+        <script>
+            // CanvasManager类 - 完整的涂鸦板实现
+            class CanvasManager {
+                constructor() {
+                    this.currentColor = '#000000'; // 默认黑色，确保可见
+                    this.currentTool = 'brush';
+                    this.lineWidth = 3; // 增大线条宽度
+                    this.isDrawing = false;
+                    this.lastX = 0;
+                    this.lastY = 0;
+                    this.canvas = null;
+                    this.ctx = null;
+                }
+                
+                // 初始化
+                init() {
+
+                    
+                    // 获取画布元素
+                    this.canvas = document.getElementById('doodle-canvas');
+                    if (!this.canvas) {
+                        console.error('CanvasManager: 未找到画布元素!');
+                        return false;
+                    }
+                    
+                    // 强制设置画布样式
+                    this.canvas.style.display = 'block';
+                    this.canvas.style.pointerEvents = 'auto';
+                    this.canvas.style.zIndex = '100';
+                    this.canvas.style.border = '1px solid #ccc';
+                    this.canvas.style.width = '100%';
+                    this.canvas.style.height = '400px'; // 设置默认高度
+                    
+                    // 设置默认背景色为白色
+                    this.canvas.style.background = 'white';
+                    
+                    // 更新画布尺寸（使用实际像素值）
+                    this.updateCanvasSize();
+                    
+                    // 获取绘图上下文
+                    this.ctx = this.canvas.getContext('2d');
+                    if (!this.ctx) {
+                        console.error('CanvasManager: 无法获取画布上下文!');
+                        return false;
+                    }
+                    
+                    // 配置绘图上下文
+                    this.setupContext();
+                    
+                    // 绑定事件
+                    this.bindEvents();
+                    
+
+                    return true;
+                }
+                
+                // 设置上下文属性
+                setupContext() {
+                    if (this.ctx) {
+                        // 根据当前工具类型设置不同的线宽
+                        if (this.currentTool === 'eraser') {
+                            // 橡皮擦模式
+                            this.ctx.lineWidth = 20; // 使用更大的线宽作为橡皮擦
+                            this.ctx.globalCompositeOperation = 'destination-out';
+
+                        } else {
+                            // 画笔模式
+                            this.ctx.lineWidth = this.lineWidth;
+                            this.ctx.globalCompositeOperation = 'source-over';
+                            this.ctx.strokeStyle = this.currentColor;
+
+                        }
+                        
+                        this.ctx.lineCap = 'round';
+                        this.ctx.lineJoin = 'round';
+                    }
+                }
+                
+                // 更新画布尺寸
+                updateCanvasSize() {
+                    if (this.canvas) {
+                        // 保持HTML中设置的尺寸，不要重新计算
+                        // 这确保画布保持800x400像素的原始尺寸
+
+                        
+                        // 重新设置绘图上下文
+                        this.setupContext();
+                    }
+                }
+                
+                // 绑定事件
+                bindEvents() {
+                    if (!this.canvas) return;
+                    
+                    // 鼠标事件 - 使用正确的方法名
+                    this.canvas.addEventListener('mousedown', (e) => this.handleStart(e));
+                    this.canvas.addEventListener('mousemove', (e) => this.handleMove(e));
+                    this.canvas.addEventListener('mouseup', () => this.handleEnd());
+                    this.canvas.addEventListener('mouseout', () => this.handleEnd());
+                    
+                    // 触摸事件
+                    this.canvas.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: false });
+                    this.canvas.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false });
+                    this.canvas.addEventListener('touchend', () => this.handleEnd());
+                    
+                    // 窗口大小改变时更新画布尺寸
+                    window.addEventListener('resize', () => this.updateCanvasSize());
+                }
+                
+                // 处理开始绘图
+                handleStart(e) {
+
+                    this.isDrawing = true;
+                    
+                    // 直接使用画布坐标计算方法
+                    const rect = this.canvas.getBoundingClientRect();
+                    const scaleX = this.canvas.width / rect.width;
+                    const scaleY = this.canvas.height / rect.height;
+                    
+                    // 计算精确坐标
+                    this.lastX = (e.clientX - rect.left) * scaleX;
+                    this.lastY = (e.clientY - rect.top) * scaleY;
+                    
+                    // 应用经验偏移量修正
+                    const OFFSET_X = -15; // 根据反馈调整为-15px
+                    const OFFSET_Y = 0;
+                    
+                    this.lastX += OFFSET_X;
+                    this.lastY += OFFSET_Y;
+                    
+                    // 确保上下文设置正确
+                    this.setupContext();
+                    
+                    // 开始路径
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.lastX, this.lastY);
+
+                }
+                
+                // 处理移动绘图
+                handleMove(e) {
+                    if (!this.isDrawing) return;
+                    
+                    // 直接使用画布坐标计算方法
+                    const rect = this.canvas.getBoundingClientRect();
+                    const scaleX = this.canvas.width / rect.width;
+                    const scaleY = this.canvas.height / rect.height;
+                    
+                    // 计算精确坐标
+                    const x = (e.clientX - rect.left) * scaleX;
+                    const y = (e.clientY - rect.top) * scaleY;
+                    
+                    // 应用经验偏移量修正
+                    const OFFSET_X = -15; // 根据反馈调整为-15px
+                    const OFFSET_Y = 0;
+                    
+                    const adjustedX = x + OFFSET_X;
+                    const adjustedY = y + OFFSET_Y;
+                    
+                    // 确保上下文设置正确
+                    this.setupContext();
+                    
+                    // 绘制线条
+                    this.ctx.lineTo(adjustedX, adjustedY);
+                    this.ctx.stroke();
+                    
+                    // 更新最后坐标
+                    this.lastX = adjustedX;
+                    this.lastY = adjustedY;
+                }
+                
+                // 处理结束绘图
+                handleEnd() {
+                    if (this.isDrawing) {
+                        this.ctx.closePath();
+                        this.isDrawing = false;
+    
+                    }
+                }
+                
+                // 处理触摸开始
+                handleTouchStart(e) {
+                    e.preventDefault(); // 阻止默认行为
+                    const touch = e.touches[0];
+                    this.handleStart(touch); // 复用鼠标事件处理
+                }
+                
+                // 处理触摸移动
+                handleTouchMove(e) {
+                    e.preventDefault(); // 阻止默认行为
+                    const touch = e.touches[0];
+                    this.handleMove(touch); // 复用鼠标事件处理
+                }
+                
+                // 设置颜色
+                setColor(color) {
+                    this.currentColor = color;
+                    if (this.ctx) {
+                        this.ctx.strokeStyle = color;
+    
+                    }
+                }
+                
+                // 设置工具
+                setTool(tool) {
+                    this.currentTool = tool;
+                    if (this.ctx) {
+                        if (tool === 'eraser') {
+                            this.ctx.globalCompositeOperation = 'destination-out';
+        
+                        } else {
+                            this.ctx.globalCompositeOperation = 'source-over';
+        
+                        }
+                    }
+                }
+                
+                // 清空画布
+                clearCanvas() {
+                    if (this.ctx && this.canvas) {
+                        this.ctx.save();
+                        this.ctx.globalCompositeOperation = 'source-over';
+                        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                        this.ctx.restore();
+    
+                    }
+                }
+            }
+            
+            // 创建单例实例
+            const canvasManager = new CanvasManager();
+            window.canvasManager = canvasManager;
+            
+            // 全局函数 - 简化版本
+            function initDoodleCanvas() {
+    
+                if (window.canvasManager) {
+                    return window.canvasManager.init();
+                } else {
+                    console.error('canvasManager未定义');
+                    return false;
+                }
+            }
+            
+            function selectColor(color, element) {
+    
+                if (window.canvasManager) {
+                    window.canvasManager.setColor(color);
+                    // 如果提供了元素，设置活动状态
+                    if (element) {
+                        const siblings = Array.from(element.parentElement.children);
+                        siblings.forEach(sib => sib.classList.remove('active'));
+                        element.classList.add('active');
+                    }
+                }
+            }
+            
+            function selectTool(tool, element) {
+    
+                if (window.canvasManager) {
+                    window.canvasManager.setTool(tool);
+                    // 如果提供了元素，设置活动状态
+                    if (element) {
+                        const siblings = Array.from(element.parentElement.children);
+                        siblings.forEach(sib => sib.classList.remove('active'));
+                        element.classList.add('active');
+                    }
+                }
+            }
+            
+            function clearCanvas() {
+    
+                if (window.canvasManager) {
+                    window.canvasManager.clearCanvas();
+                }
+            }
+            
+            // 重新定义bindAllElements函数，确保所有事件正确绑定
+            window.bindAllElements = function() {
+    
+                
+                // 查找所有可能的清空按钮ID和类名
+                const clearButtonIds = ['clear-btn', 'clear-button', 'clear-canvas', 'reset-canvas'];
+                let clearBtn = null;
+                
+                // 尝试通过ID查找
+                for (const id of clearButtonIds) {
+                    clearBtn = document.getElementById(id);
+                    if (clearBtn) break;
+                }
+                
+                // 如果ID查找失败，尝试通过类名
+                if (!clearBtn) {
+                    const clearBtnByClass = document.querySelector('.clear-btn, .btn-clear, .reset-btn');
+                    if (clearBtnByClass) {
+                        clearBtn = clearBtnByClass;
+                    }
+                }
+                
+                // 绑定清空按钮
+                if (clearBtn) {
+                    clearBtn.addEventListener('click', function() {
+        
+                        clearCanvas();
+                    });
+    
+                }
+                
+                // 绑定颜色选择器
+                const colorOptions = document.querySelectorAll('.color-option, .color, .color-swatch');
+                if (colorOptions.length > 0) {
+                    colorOptions.forEach(option => {
+                        option.addEventListener('click', function() {
+                            const color = this.getAttribute('data-color') || 
+                                        this.style.backgroundColor || 
+                                        this.getAttribute('color');
+                            if (color) {
+                
+                                selectColor(color, this);
+                            }
+                        });
+                    });
+    
+                }
+                
+                // 绑定工具按钮
+                const toolButtons = document.querySelectorAll('.tool-btn, .tool, .drawing-tool');
+                if (toolButtons.length > 0) {
+                    toolButtons.forEach(button => {
+                        button.addEventListener('click', function() {
+                            const tool = this.getAttribute('data-tool') || 
+                                       this.getAttribute('tool') || 
+                                       this.dataset.tool;
+                            if (tool) {
+                
+                                selectTool(tool, this);
+                            }
+                        });
+                    });
+    
+                }
+            };
+            
+            // 全局暴露函数
+            window.initDoodleCanvas = initDoodleCanvas;
+            window.selectColor = selectColor;
+            window.selectTool = selectTool;
+            window.clearCanvas = clearCanvas;
+            
+            // 自动初始化
+            document.addEventListener('DOMContentLoaded', function() {
+    
+                
+                // 延迟初始化，确保DOM完全加载
+                setTimeout(() => {
+                    try {
+                        // 初始化画布
+                        const initResult = initDoodleCanvas();
+                        if (initResult) {
+            
+                            
+                            // 绑定所有事件
+                            bindAllElements();
+                            
+                        } else {
+                            console.error('涂鸦板初始化失败');
+                        }
+                    } catch (err) {
+                        console.error('初始化过程出错:', err);
+                    }
+                }, 500);
+            });
+        </script>
+        <!-- 背景音乐控制脚本 -->
+<script>
+    // 创建音频元素
+    const audio = new Audio();
+    audio.loop = true;
+    audio.volume = 0.5;
+    
+    // 获取DOM元素
+    const musicBtn = document.getElementById('music-btn');
+    const musicSelect = document.getElementById('music-select');
+    const musicProgress = document.getElementById('music-progress');
+    
+    // 播放/暂停控制
+    musicBtn.addEventListener('click', function() {
+        if (audio.src) {
+            if (audio.paused) {
+                audio.play().catch(error => {
+                    console.error('音乐播放失败:', error);
+                });
+                musicBtn.classList.add('active');
+                musicBtn.innerHTML = '<span class="music-icon">⏸️</span>';
+            } else {
+                audio.pause();
+                musicBtn.classList.remove('active');
+                musicBtn.innerHTML = '<span class="music-icon">🎵</span>';
+            }
+        }
+    });
+    
+    // 音乐选择切换
+    musicSelect.addEventListener('change', function() {
+        const musicSrc = this.value;
+        if (musicSrc) {
+            // 暂停当前播放
+            if (!audio.paused) {
+                audio.pause();
+                musicBtn.classList.remove('active');
+                musicBtn.innerHTML = '<span class="music-icon">🎵</span>';
+            }
+            
+            // 设置新的音乐源
+            audio.src = musicSrc;
+            // 重置进度条
+            musicProgress.value = 0;
+            
+            // 尝试自动播放
+            audio.play().then(() => {
+                musicBtn.classList.add('active');
+                musicBtn.innerHTML = '<span class="music-icon">⏸️</span>';
+            }).catch(error => {
+                console.error('音乐播放失败:', error);
+            });
+        }
+    });
+    
+    // 更新进度条位置
+    audio.addEventListener('timeupdate', function() {
+        if (audio.duration > 0) {
+            const progress = (audio.currentTime / audio.duration) * 100;
+            musicProgress.value = progress;
+        }
+    });
+    
+    // 音乐加载完成后初始化进度条
+    audio.addEventListener('loadedmetadata', function() {
+        musicProgress.value = 0;
+    });
+    
+    // 拖动进度条控制音乐播放位置
+    musicProgress.addEventListener('input', function() {
+        const progress = this.value / 100;
+        audio.currentTime = progress * audio.duration;
+    });
+    
+    // 点击进度条跳转
+    musicProgress.addEventListener('change', function() {
+        const progress = this.value / 100;
+        audio.currentTime = progress * audio.duration;
+    });
+    
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('音乐控制功能已初始化');
+    });
+</script>
+    
+
+</body>
+</html>
